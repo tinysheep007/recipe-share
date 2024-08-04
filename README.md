@@ -1,3 +1,15 @@
+Don't forget to add a .env.local file under root directory in the following format
+
+```
+NEXT_PUBLIC_API_KEY=[your key]
+NEXT_PUBLIC_AUTH_DOMAIN=[]
+NEXT_PUBLIC_PROJECT_ID=[]
+NEXT_PUBLIC_STORAGE_BUCKET=[]
+NEXT_PUBLIC_MESSAGING_SENDER_ID=[]
+NEXT_PUBLIC_APP_ID=[]
+NEXT_PUBLIC_MEASUREMENT_ID=[]
+```
+
 This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
 ## Getting Started
