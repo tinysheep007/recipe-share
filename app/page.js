@@ -1,8 +1,7 @@
-// pages/index.js
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Box, Stack, Typography, Button } from '@mui/material';
+import { Box, Stack, Typography, Button, Pagination } from '@mui/material';
 import { firestore } from '@/firebase';
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth } from '@/firebase';
@@ -10,14 +9,18 @@ import { signOut } from "firebase/auth";
 import DishItem from '@/components/DishItem/DishItem';
 import { useRouter } from 'next/navigation';
 import IngredientsModal from '@/components/Modal/IngredientsModal';
-import AddDishModal from '@/components/Modal/AddDishModal'; // Import AddDishModal
-import { query, doc, collection, getDocs, setDoc, getDoc, deleteDoc, writeBatch } from 'firebase/firestore';
+import AddDishModal from '@/components/Modal/AddDishModal';
+import SearchBar from '@/components/SearchBar';
+import { query, doc, collection, getDocs, setDoc, writeBatch, where } from 'firebase/firestore';
 
 export default function Home() {
   const [user] = useAuthState(auth);
   const [dishes, setDishes] = useState([]);
-  const [openAddDishModal, setOpenAddDishModal] = useState(false); // State for AddDishModal
-  const [openIngredientsModal, setOpenIngredientsModal] = useState(false); // State for IngredientsModal
+  const [filteredDishes, setFilteredDishes] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const dishesPerPage = 5;
+  const [openAddDishModal, setOpenAddDishModal] = useState(false);
+  const [openIngredientsModal, setOpenIngredientsModal] = useState(false);
   const [selectedDishId, setSelectedDishId] = useState(null);
   const route = useRouter();
 
@@ -29,33 +32,68 @@ export default function Home() {
       dishesList.push({ id: doc.id, ...doc.data() });
     });
     setDishes(dishesList);
+    setFilteredDishes(dishesList); // Set filtered dishes initially
+  };
+
+  const handleSearch = async (term, option) => {
+
+    if (term.trim() === "") {
+      setFilteredDishes(dishes);
+      setCurrentPage(1); // Reset to first page when search term is empty
+      return;
+    }
+
+    let querySnapshot;
+    let filteredList = [];
+    
+
+    if (option === "dishName") {
+      const dishQuery = query(
+        collection(firestore, 'dishes'),
+        where('dishName', '>=', term),
+        where('dishName', '<=', term + '\uf8ff')
+      );
+      querySnapshot = await getDocs(dishQuery);
+      filteredList = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    } else if (option === "ingredientName") {
+      const dishesWithIngredient = [];
+      const dishesSnapshot = await getDocs(collection(firestore, 'dishes'));
+      for (const dish of dishesSnapshot.docs) {
+        const ingredientsSnapshot = await getDocs(collection(firestore, `dishes/${dish.id}/ingredients`));
+        ingredientsSnapshot.forEach((ingredientDoc) => {
+          if (ingredientDoc.id.toLowerCase().includes(term.toLowerCase())) {
+            dishesWithIngredient.push(dish.data());
+          }
+        });
+      }
+      filteredList = dishesWithIngredient;
+    }
+
+    setFilteredDishes(filteredList);
+    setCurrentPage(1); // Reset to first page on new search
   };
 
   const handleManageIngredients = (dishId) => {
     setSelectedDishId(dishId);
-    setOpenIngredientsModal(true); // Open IngredientsModal
+    setOpenIngredientsModal(true);
   };
 
-
   const handleAddDishSubmit = async (dishData) => {
-    const currentID = user ? user.uid : "browser"; // Set userID to "browser" if no user
-  
+    const currentID = user ? user.uid : "browser";
+
     try {
-      const { dishName, prepTime, cost, ingredients, pictureUrl } = dishData;
-  
-      // Generate a unique ID for the new dish
+      const { dishName, prepTime, cost, ingredients, pictureUrl, instructions } = dishData;
       const newDishRef = doc(collection(firestore, 'dishes'));
-  
-      // Set the dish data in Firestore
+
       await setDoc(newDishRef, {
         userID: currentID,
         dishName,
         prepTime,
         cost,
-        pictureUrl, // Default image URL if none provided
+        pictureUrl,
+        instructions
       });
-  
-      // Add ingredients to the dish's subcollection
+
       const batch = writeBatch(firestore);
       ingredients.forEach(({ name, quantity }) => {
         if (name && quantity) {
@@ -63,21 +101,14 @@ export default function Home() {
           batch.set(ingredientRef, { quantity });
         }
       });
-  
-      // Commit the batch operation
+
       await batch.commit();
-  
-      // Update the dishes list
       await updateDishes();
-  
-      // Close the modal
       setOpenAddDishModal(false);
     } catch (error) {
       console.error('Error adding dish:', error);
     }
   };
-  
-  
 
   const handleSignOut = async () => {
     try {
@@ -92,38 +123,51 @@ export default function Home() {
     updateDishes();
   }, []);
 
+  useEffect(() => {
+    setFilteredDishes(dishes);
+    setCurrentPage(1); 
+  }, [dishes]);
+
+  const indexOfLastDish = currentPage * dishesPerPage;
+  const indexOfFirstDish = indexOfLastDish - dishesPerPage;
+  const currentDishes = filteredDishes.slice(indexOfFirstDish, indexOfLastDish);
+
   return (
     <Box sx={{ padding: 4 }}>
-      <Typography variant="h1" sx={{ marginBottom: 2 }}>Dish Management</Typography>
-      {user ? user.email : <></>}
-      <Stack
-        spacing={2}
-        direction="row"
-        alignItems="center"
-        justifyContent="center"
-        sx={{ marginTop: 2 }}
-      >
-        <Button variant="contained" color="primary" onClick={() => route.push("/signup")}>
-          Login / Sign up
-        </Button>
-        {
-          user ? <Button onClick={handleSignOut}>
-          Sign out
-        </Button> : <></>
-        }
-        
-        <Button
-          variant="contained"
-          onClick={() => setOpenAddDishModal(true)} // Open AddDishModal
-          sx={{ marginBottom: 2 }}
-        >
-          Add Dish
-        </Button>
+      <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ marginBottom: 2 }}>
+        <Typography variant="h1">Recipe Share</Typography>
+        <Stack direction="row" spacing={2}>
+          <Button variant="contained" color="success" onClick={() => route.push("/signin")}>
+            Login 
+          </Button>
+
+          <Button variant="contained" color="info" onClick={() => route.push("/signup")}>
+            Sign up
+          </Button>
+
+          {user && (
+            <Button variant="contained" color="warning" onClick={handleSignOut}>
+              Sign out
+            </Button>
+          )}
+          
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={() => setOpenAddDishModal(true)}
+          >
+            Add Dish
+          </Button>
+        </Stack>
       </Stack>
+      
+      <SearchBar onSearch={handleSearch} />
+      
       <AddDishModal open={openAddDishModal} onClose={() => setOpenAddDishModal(false)} onSubmit={handleAddDishSubmit} />
       <IngredientsModal open={openIngredientsModal} onClose={() => setOpenIngredientsModal(false)} dishId={selectedDishId} />
+
       <Stack spacing={2}>
-        {dishes.map(dish => (
+        {currentDishes.map(dish => (
           <DishItem
             key={dish.id}
             dish={dish}
@@ -132,6 +176,14 @@ export default function Home() {
           />
         ))}
       </Stack>
+      
+      <Pagination
+        count={Math.ceil(filteredDishes.length / dishesPerPage)}
+        page={currentPage}
+        onChange={(e, page) => setCurrentPage(page)}
+        color="primary"
+        sx={{ marginTop: 2, display: 'flex', justifyContent: 'center' }}
+      />
     </Box>
   );
 }

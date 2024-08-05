@@ -27,56 +27,60 @@ export default function IngredientsModal({ open, onClose, dishId }) {
   const handleAddIngredient = async () => {
     if (ingredientToAdd && quantityToAdd) {
       const ingredientRef = doc(collection(firestore, `dishes/${dishId}/ingredients`), ingredientToAdd);
-      await setDoc(ingredientRef, { quantity: parseInt(quantityToAdd) }, { merge: true });
+      await setDoc(ingredientRef, { quantity: quantityToAdd.toString() }, { merge: true });
       fetchIngredients(); // Refresh the ingredient list
       setIngredientToAdd("");
       setQuantityToAdd("");
     }
   };
 
+  const updateQuantity = (quantity, delta) => {
+    const quantityString = quantity.toString();
+    const numericPart = parseInt(quantityString, 10);
+    const stringPart = quantityString.replace(numericPart.toString(), '');
+    const newNumericPart = numericPart + delta;
+    return newNumericPart.toString() + stringPart;
+  };
+
   const handleRemoveIngredient = async (ingredientId) => {
     try {
       const ingredientRef = doc(firestore, `dishes/${dishId}/ingredients/${ingredientId}`);
       const ingredientDoc = await getDoc(ingredientRef);
-  
+
       if (ingredientDoc.exists()) {
         const ingredientData = ingredientDoc.data();
-        const newQuantity = ingredientData.quantity - 1; // Decrease quantity by 1
-  
-        if (newQuantity <= 0) {
-          // Optionally delete the ingredient document if quantity is 0 or less
+        const newQuantity = updateQuantity(ingredientData.quantity, -1);
+
+        if (parseInt(newQuantity, 10) <= 0) {
           await deleteDoc(ingredientRef);
         } else {
-          // Update the quantity in the document
           await setDoc(ingredientRef, { quantity: newQuantity }, { merge: true });
         }
-  
+
         fetchIngredients(); // Refresh the ingredient list
       }
     } catch (error) {
       console.error("Error removing ingredient:", error);
     }
   };
-  
+
   const handleAddAmount = async (ingredientId) => {
     try {
-        const ingredientRef = doc(firestore, `dishes/${dishId}/ingredients/${ingredientId}`);
-        const ingredientDoc = await getDoc(ingredientRef);
-    
-        if (ingredientDoc.exists()) {
-            const ingredientData = ingredientDoc.data();
-            const newQuantity = ingredientData.quantity + 1; 
-    
-            // Update the quantity in the document
-            await setDoc(ingredientRef, { quantity: newQuantity }, { merge: true });
-          
-    
-            fetchIngredients(); // Refresh the ingredient list
-        }
-      } catch (error) {
-        console.error("Error adding ingredient:", error);
+      const ingredientRef = doc(firestore, `dishes/${dishId}/ingredients/${ingredientId}`);
+      const ingredientDoc = await getDoc(ingredientRef);
+
+      if (ingredientDoc.exists()) {
+        const ingredientData = ingredientDoc.data();
+        const newQuantity = updateQuantity(ingredientData.quantity, 1);
+
+        await setDoc(ingredientRef, { quantity: newQuantity }, { merge: true });
+
+        fetchIngredients(); 
       }
-  }
+    } catch (error) {
+      console.error("Error adding ingredient:", error);
+    }
+  };
 
   return (
     <Modal open={open} onClose={onClose}>
@@ -90,13 +94,15 @@ export default function IngredientsModal({ open, onClose, dishId }) {
         border: '2px solid #000',
         boxShadow: 24,
         p: 4,
+        maxHeight: '90vh', // Set a maximum height
+        overflowY: 'auto', // Enable vertical scrolling
       }}>
         <Typography variant="h6" component="h2" sx={{ marginBottom: 2 }}>Manage Ingredients</Typography>
         {ingredients.map((ingredient) => (
           <Box key={ingredient.id} sx={{ marginBottom: 2 }}>
             <Typography variant="body1">{ingredient.id}</Typography>
             <Typography variant="body2">Quantity: {ingredient.quantity}</Typography>
-            <Button variant="outlined" onClick={()=>handleAddAmount(ingredient.id)}>Add</Button>
+            <Button variant="outlined" onClick={() => handleAddAmount(ingredient.id)}>Add</Button>
             <Button
               variant="outlined"
               color="secondary"
@@ -119,7 +125,6 @@ export default function IngredientsModal({ open, onClose, dishId }) {
           label="Quantity"
           variant="outlined"
           fullWidth
-          type="number"
           value={quantityToAdd}
           onChange={(e) => setQuantityToAdd(e.target.value)}
           sx={{ marginBottom: 2 }}

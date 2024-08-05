@@ -1,13 +1,13 @@
 'use client';
 
-// components/Modal/AddDishModal.js
-import { Box, Typography, TextField, Button, Modal } from '@mui/material';
+import { Box, Typography, TextField, Button, Modal, Stack } from '@mui/material';
 import { useState } from 'react';
 
 export default function AddDishModal({ open, onClose, onSubmit }) {
   const [dishName, setDishName] = useState("");
   const [prepTime, setPrepTime] = useState("");
   const [cost, setCost] = useState("");
+  const [instructions, setIns] = useState("");
   const [ingredients, setIngredients] = useState([{ name: "", quantity: "" }]);
   const [pictureUrl, setPictureUrl] = useState(""); // State for picture URL
 
@@ -16,15 +16,13 @@ export default function AddDishModal({ open, onClose, onSubmit }) {
     const url = pictureUrl;
     const finalPictureUrl = url || "https://www.destenaire.com/noaccess/wp-content/uploads/2014/10/8-Oddest-Food-Items-Featured-Image1.png";
 
-    onSubmit({ dishName, prepTime, cost, ingredients, pictureUrl: finalPictureUrl });
+    onSubmit({ dishName, prepTime, cost, ingredients, pictureUrl: finalPictureUrl, instructions });
     setDishName('');
     setPrepTime('');
     setCost('');
+    setIns('');
     setIngredients([{ name: "", quantity: "" }]);
     setPictureUrl(''); // Clear picture URL state
-
-    console.log("modal print")
-    console.log(url)
   };
 
   return (
@@ -39,6 +37,8 @@ export default function AddDishModal({ open, onClose, onSubmit }) {
         border: '2px solid #000',
         boxShadow: 24,
         p: 4,
+        maxHeight: '90vh', // Set a maximum height
+        overflowY: 'auto', // Enable vertical scrolling
       }}>
         <Typography variant="h6" component="h2" sx={{ marginBottom: 2 }}>Add New Dish</Typography>
         <TextField
@@ -71,6 +71,15 @@ export default function AddDishModal({ open, onClose, onSubmit }) {
           fullWidth
           value={pictureUrl}
           onChange={(e) => setPictureUrl(e.target.value)}
+          sx={{ marginBottom: 2 }}
+        />
+        <Typography variant="h6" component="h2" sx={{ marginBottom: 2 }}>Instructions</Typography>
+        <TextField
+          label="Cooking Guide"
+          variant="outlined"
+          fullWidth
+          value={instructions}
+          onChange={(e) => setIns(e.target.value)}
           sx={{ marginBottom: 2 }}
         />
         <Typography variant="h6" component="h2" sx={{ marginTop: 2, marginBottom: 2 }}>Ingredients</Typography>
@@ -108,12 +117,20 @@ export default function AddDishModal({ open, onClose, onSubmit }) {
         >
           Add Another Ingredient
         </Button>
-        <Button
-          variant="contained"
-          onClick={handleSubmit}
-        >
-          SUBMIT
-        </Button>
+        <Stack direction="row" spacing={2} sx={{ marginTop: 2 }}>
+          <Button
+            variant="contained"
+            onClick={handleSubmit}
+          >
+            SUBMIT
+          </Button>
+          <Button
+            variant="outlined"
+            onClick={onClose}
+          >
+            Cancel
+          </Button>
+        </Stack>
       </Box>
     </Modal>
   );

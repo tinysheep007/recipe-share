@@ -10,6 +10,10 @@ NEXT_PUBLIC_APP_ID=[]
 NEXT_PUBLIC_MEASUREMENT_ID=[]
 ```
 
+You can onlty edit the dishes that you uploaded. Remeber to sig up / log in.
+
+
+
 This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
 ## Getting Started

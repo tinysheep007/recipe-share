@@ -1,15 +1,19 @@
+// components/DishItem/DishItem.js
 'use client';
 
 import { Box, Typography, Button } from '@mui/material';
 import Image from 'next/image';
+import { useState } from 'react';
 import { useAuthState } from 'react-firebase-hooks/auth'; // Import the useAuthState hook from Firebase
 import { firestore } from '@/firebase'; // Import the Firestore instance
 import { doc, deleteDoc } from 'firebase/firestore'; // Import Firestore methods for deleting documents
 import { auth } from '@/firebase'; // Import the auth instance
+import ViewDishModal from '@/components/Modal/ViewDishModal'; // Import the ViewDishModal component
 
 export default function DishItem({ dish, onManageIngredients, updateDishes }) {
   const [user] = useAuthState(auth); // Get the current user
   const currentUserId = user ? user.uid : "browser"; // Set user.uid to "browser" if the user does not exist
+  const [openViewModal, setOpenViewModal] = useState(false); // State for ViewDishModal
 
   const handleDelete = async () => {
     try {
@@ -17,7 +21,6 @@ export default function DishItem({ dish, onManageIngredients, updateDishes }) {
       await deleteDoc(dishRef);
       await updateDishes();
       // Optionally, update the dishes list or trigger a re-fetch
-      
     } catch (error) {
       console.error("Error deleting dish:", error);
     }
@@ -50,14 +53,20 @@ export default function DishItem({ dish, onManageIngredients, updateDishes }) {
         <Typography variant="body2">
           Cost: {dish.cost}
         </Typography>
-        <Button
-          variant="contained"
-          color="secondary"
-          onClick={() => onManageIngredients(dish.id)}
-          sx={{ marginTop: 1 }}
-        >
-          Manage Ingredients
-        </Button>
+        
+        {
+          currentUserId === dish.userID && (
+            <Button
+              variant="contained"
+              color="secondary"
+              onClick={() => onManageIngredients(dish.id)}
+              sx={{ marginTop: 1 }}
+            >
+              Manage Ingredients
+            </Button>
+          )
+        }
+        
         {currentUserId === dish.userID && ( // Check if the current user ID matches the dish owner ID
           <Button
             variant="outlined"
@@ -68,7 +77,20 @@ export default function DishItem({ dish, onManageIngredients, updateDishes }) {
             Delete
           </Button>
         )}
+        <Button
+          variant="outlined"
+          color="primary"
+          onClick={() => setOpenViewModal(true)}
+          sx={{ marginTop: 1, marginLeft: 1 }}
+        >
+          View
+        </Button>
       </Box>
+      <ViewDishModal
+        open={openViewModal}
+        onClose={() => setOpenViewModal(false)}
+        dish={dish}
+      />
     </Box>
   );
 }
