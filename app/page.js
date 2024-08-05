@@ -1,119 +1,135 @@
-'use client'
+// pages/index.js
+'use client';
 
-import { useState, useEffect } from 'react'
-import { Box, Stack, Typography, Button, Modal, TextField } from '@mui/material'
-import { firestore } from '@/firebase'
-import {
-  collection,
-  doc,
-  getDocs,
-  query,
-  setDoc,
-  deleteDoc,
-  getDoc,
-} from 'firebase/firestore'
-import Image from "next/image";
+import { useState, useEffect } from 'react';
+import { Box, Stack, Typography, Button } from '@mui/material';
+import { firestore } from '@/firebase';
+import { useAuthState } from "react-firebase-hooks/auth";
+import { auth } from '@/firebase';
+import { signOut } from "firebase/auth";
+import DishItem from '@/components/DishItem/DishItem';
+import { useRouter } from 'next/navigation';
+import IngredientsModal from '@/components/Modal/IngredientsModal';
+import AddDishModal from '@/components/Modal/AddDishModal'; // Import AddDishModal
+import { query, doc, collection, getDocs, setDoc, getDoc, deleteDoc, writeBatch } from 'firebase/firestore';
 
 export default function Home() {
+  const [user] = useAuthState(auth);
+  const [dishes, setDishes] = useState([]);
+  const [openAddDishModal, setOpenAddDishModal] = useState(false); // State for AddDishModal
+  const [openIngredientsModal, setOpenIngredientsModal] = useState(false); // State for IngredientsModal
+  const [selectedDishId, setSelectedDishId] = useState(null);
+  const route = useRouter();
 
-  const [inventory, setInventory] = useState([])
-  const [openModal, setOpenModal] = useState(true)
-  const [itemName, setItemName] = useState("")
-
-  const updateInventory = async () => {
-    const snapshot = query(collection(firestore, 'inventory'))
-    const docs = await getDocs(snapshot)
-    const inventoryList = []
+  const updateDishes = async () => {
+    const snapshot = query(collection(firestore, 'dishes'));
+    const docs = await getDocs(snapshot);
+    const dishesList = [];
     docs.forEach((doc) => {
-      inventoryList.push({ name: doc.id, ...doc.data() })
-    })
-    setInventory(inventoryList)
+      dishesList.push({ id: doc.id, ...doc.data() });
+    });
+    setDishes(dishesList);
+  };
+
+  const handleManageIngredients = (dishId) => {
+    setSelectedDishId(dishId);
+    setOpenIngredientsModal(true); // Open IngredientsModal
+  };
+
+
+  const handleAddDishSubmit = async (dishData) => {
+    const currentID = user ? user.uid : "browser"; // Set userID to "browser" if no user
+  
+    try {
+      const { dishName, prepTime, cost, ingredients, pictureUrl } = dishData;
+  
+      // Generate a unique ID for the new dish
+      const newDishRef = doc(collection(firestore, 'dishes'));
+  
+      // Set the dish data in Firestore
+      await setDoc(newDishRef, {
+        userID: currentID,
+        dishName,
+        prepTime,
+        cost,
+        pictureUrl, // Default image URL if none provided
+      });
+  
+      // Add ingredients to the dish's subcollection
+      const batch = writeBatch(firestore);
+      ingredients.forEach(({ name, quantity }) => {
+        if (name && quantity) {
+          const ingredientRef = doc(collection(newDishRef, 'ingredients'), name);
+          batch.set(ingredientRef, { quantity });
+        }
+      });
+  
+      // Commit the batch operation
+      await batch.commit();
+  
+      // Update the dishes list
+      await updateDishes();
+  
+      // Close the modal
+      setOpenAddDishModal(false);
+    } catch (error) {
+      console.error('Error adding dish:', error);
+    }
+  };
+  
+  
+
+  const handleSignOut = async () => {
+    try {
+      await signOut(auth);
+      route.push("/signin");
+    } catch (error) {
+      console.error("Sign-out error:", error);
+    }
   }
 
-  const addItem = async (item) => {
-    const docRef = doc(collection(firestore, 'inventory'), item)
-    const docSnap = await getDoc(docRef)
-    if (docSnap.exists()) {
-      const { quantity } = docSnap.data()
-      await setDoc(docRef, { quantity: quantity + 1 })
-    } else {
-      await setDoc(docRef, { quantity: 1 })
-    }
-    await updateInventory()
-  }
-  
-  const removeItem = async (item) => {
-    const docRef = doc(collection(firestore, 'inventory'), item)
-    const docSnap = await getDoc(docRef)
-    if (docSnap.exists()) {
-      const { quantity } = docSnap.data()
-      if (quantity === 1) {
-        await deleteDoc(docRef)
-      } else {
-        await setDoc(docRef, { quantity: quantity - 1 })
-      }
-    }
-    await updateInventory()
-  }
-
-  
   useEffect(() => {
-    updateInventory()
-  }, [])
+    updateDishes();
+  }, []);
 
   return (
     <Box sx={{ padding: 4 }}>
-      <Typography variant="h1" sx={{ marginBottom: 2 }}>Inventory Management</Typography>
-      <Button variant="contained" onClick={() => setOpenModal(true)} sx={{ marginBottom: 2 }}>Add Items</Button>
-      <Modal open={openModal} onClose={() => setOpenModal(false)}>
-        <Box sx={{
-          position: 'absolute',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          width: 400,
-          bgcolor: 'background.paper',
-          border: '2px solid #000',
-          boxShadow: 24,
-          p: 4,
-        }}>
-          <Typography variant="h6" component="h2" sx={{ marginBottom: 2 }}>Add New Item</Typography>
-          <TextField
-            id="outlined-basic"
-            label="Item"
-            variant="outlined"
-            fullWidth
-            value={itemName}
-            onChange={(e) => setItemName(e.target.value)}
-            sx={{ marginBottom: 2 }}
-          />
-          <Button
-            variant="outlined"
-            onClick={() => {
-              addItem(itemName);
-              setItemName('');
-              setOpenModal(false);
-            }}
-          >
-            SUBMIT
-          </Button>
-        </Box>
-      </Modal>
+      <Typography variant="h1" sx={{ marginBottom: 2 }}>Dish Management</Typography>
+      {user ? user.email : <></>}
+      <Stack
+        spacing={2}
+        direction="row"
+        alignItems="center"
+        justifyContent="center"
+        sx={{ marginTop: 2 }}
+      >
+        <Button variant="contained" color="primary" onClick={() => route.push("/signup")}>
+          Login / Sign up
+        </Button>
+        {
+          user ? <Button onClick={handleSignOut}>
+          Sign out
+        </Button> : <></>
+        }
+        
+        <Button
+          variant="contained"
+          onClick={() => setOpenAddDishModal(true)} // Open AddDishModal
+          sx={{ marginBottom: 2 }}
+        >
+          Add Dish
+        </Button>
+      </Stack>
+      <AddDishModal open={openAddDishModal} onClose={() => setOpenAddDishModal(false)} onSubmit={handleAddDishSubmit} />
+      <IngredientsModal open={openIngredientsModal} onClose={() => setOpenIngredientsModal(false)} dishId={selectedDishId} />
       <Stack spacing={2}>
-        {inventory.map(({ name, quantity }) => (
-          <Box key={name} sx={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            padding: 2,
-            border: '1px solid #ccc',
-            borderRadius: 2
-          }}>
-            <Typography>{name}</Typography>
-            <Typography>{quantity}</Typography>
-            <Button variant="contained" color="secondary" onClick={() => addItem(name)}>Add</Button>
-            <Button variant="contained" color="secondary" onClick={() => removeItem(name)}>Remove</Button>
-          </Box>
+        {dishes.map(dish => (
+          <DishItem
+            key={dish.id}
+            dish={dish}
+            onManageIngredients={handleManageIngredients}
+            updateDishes={updateDishes}
+          />
         ))}
       </Stack>
     </Box>
