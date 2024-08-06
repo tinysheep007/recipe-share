@@ -32,14 +32,14 @@ export default function Home() {
       dishesList.push({ id: doc.id, ...doc.data() });
     });
     setDishes(dishesList);
-    setFilteredDishes(dishesList); // Set filtered dishes initially
+    setFilteredDishes(dishesList); 
   };
 
   const handleSearch = async (term, option) => {
 
     if (term.trim() === "") {
       setFilteredDishes(dishes);
-      setCurrentPage(1); // Reset to first page when search term is empty
+      setCurrentPage(1);  
       return;
     }
 
@@ -70,7 +70,7 @@ export default function Home() {
     }
 
     setFilteredDishes(filteredList);
-    setCurrentPage(1); // Reset to first page on new search
+    setCurrentPage(1); 
   };
 
   const handleManageIngredients = (dishId) => {

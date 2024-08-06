@@ -1,6 +1,5 @@
 'use client'
 
-// src/components/SignUp.js
 import React, { useState } from 'react';
 import { useCreateUserWithEmailAndPassword } from 'react-firebase-hooks/auth';
 import { auth } from "@/firebase";

@@ -1,6 +1,5 @@
 'use client';
 
-// components/DishList/DishList.js
 import DishItem from '../DishItem/DishItem';
 import { Stack } from '@mui/material';
 

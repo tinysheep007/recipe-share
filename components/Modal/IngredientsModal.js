@@ -1,4 +1,4 @@
-// components/Modal/IngredientsModal.js
+
 'use client';
 
 import { Box, Typography, TextField, Button, Modal } from '@mui/material';
@@ -28,7 +28,7 @@ export default function IngredientsModal({ open, onClose, dishId }) {
     if (ingredientToAdd && quantityToAdd) {
       const ingredientRef = doc(collection(firestore, `dishes/${dishId}/ingredients`), ingredientToAdd);
       await setDoc(ingredientRef, { quantity: quantityToAdd.toString() }, { merge: true });
-      fetchIngredients(); // Refresh the ingredient list
+      fetchIngredients(); 
       setIngredientToAdd("");
       setQuantityToAdd("");
     }
@@ -57,7 +57,7 @@ export default function IngredientsModal({ open, onClose, dishId }) {
           await setDoc(ingredientRef, { quantity: newQuantity }, { merge: true });
         }
 
-        fetchIngredients(); // Refresh the ingredient list
+        fetchIngredients();
       }
     } catch (error) {
       console.error("Error removing ingredient:", error);
@@ -94,8 +94,8 @@ export default function IngredientsModal({ open, onClose, dishId }) {
         border: '2px solid #000',
         boxShadow: 24,
         p: 4,
-        maxHeight: '90vh', // Set a maximum height
-        overflowY: 'auto', // Enable vertical scrolling
+        maxHeight: '90vh',
+        overflowY: 'auto',
       }}>
         <Typography variant="h6" component="h2" sx={{ marginBottom: 2 }}>Manage Ingredients</Typography>
         {ingredients.map((ingredient) => (

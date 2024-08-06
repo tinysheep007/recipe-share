@@ -9,10 +9,10 @@ export default function AddDishModal({ open, onClose, onSubmit }) {
   const [cost, setCost] = useState("");
   const [instructions, setIns] = useState("");
   const [ingredients, setIngredients] = useState([{ name: "", quantity: "" }]);
-  const [pictureUrl, setPictureUrl] = useState(""); // State for picture URL
+  const [pictureUrl, setPictureUrl] = useState(""); 
 
   const handleSubmit = () => {
-    // Use default image URL if pictureUrl is empty
+
     const url = pictureUrl;
     const finalPictureUrl = url || "https://www.destenaire.com/noaccess/wp-content/uploads/2014/10/8-Oddest-Food-Items-Featured-Image1.png";
 
@@ -22,7 +22,7 @@ export default function AddDishModal({ open, onClose, onSubmit }) {
     setCost('');
     setIns('');
     setIngredients([{ name: "", quantity: "" }]);
-    setPictureUrl(''); // Clear picture URL state
+    setPictureUrl(''); 
   };
 
   return (
@@ -37,8 +37,8 @@ export default function AddDishModal({ open, onClose, onSubmit }) {
         border: '2px solid #000',
         boxShadow: 24,
         p: 4,
-        maxHeight: '90vh', // Set a maximum height
-        overflowY: 'auto', // Enable vertical scrolling
+        maxHeight: '90vh', 
+        overflowY: 'auto', 
       }}>
         <Typography variant="h6" component="h2" sx={{ marginBottom: 2 }}>Add New Dish</Typography>
         <TextField

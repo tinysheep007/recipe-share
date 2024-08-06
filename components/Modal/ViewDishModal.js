@@ -1,4 +1,4 @@
-// components/Modal/ViewDishModal.js
+
 'use client';
 
 import { Box, Typography, Modal, Button } from '@mui/material';
@@ -34,8 +34,8 @@ export default function ViewDishModal({ open, onClose, dish }) {
         border: '2px solid #000',
         boxShadow: 24,
         p: 4,
-        maxHeight: '90vh', // Set a maximum height
-        overflowY: 'auto', // Enable vertical scrolling
+        maxHeight: '90vh', 
+        overflowY: 'auto', 
       }}>
         <Typography variant="h6" component="h2" sx={{ marginBottom: 2 }}>View Dish</Typography>
         <Typography variant="body1" sx={{ fontWeight: 'bold', marginBottom: 1 }}>

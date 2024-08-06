@@ -1,6 +1,5 @@
 'use client';
 
-// components/Header/Header.js
 import { Stack, Button, Typography } from '@mui/material';
 import { useRouter } from 'next/navigation';
 import { signOut } from "firebase/auth";
