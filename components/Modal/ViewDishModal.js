@@ -1,7 +1,6 @@
-
 'use client';
 
-import { Box, Typography, Modal, Button } from '@mui/material';
+import { Box, Typography, Modal } from '@mui/material';
 import { useState, useEffect } from 'react';
 import { firestore } from '@/firebase';
 import { collection, getDocs } from 'firebase/firestore';
@@ -9,12 +8,14 @@ import { collection, getDocs } from 'firebase/firestore';
 export default function ViewDishModal({ open, onClose, dish }) {
   const [ingredients, setIngredients] = useState([]);
 
+  // if dish changes, re render ingredients
   useEffect(() => {
     if (dish) {
       fetchIngredients();
     }
   }, [dish]);
 
+  // set all ingredients to state
   const fetchIngredients = async () => {
     const snapshot = collection(firestore, `dishes/${dish.id}/ingredients`);
     const docs = await getDocs(snapshot);

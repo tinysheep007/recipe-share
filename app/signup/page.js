@@ -1,15 +1,15 @@
 'use client'
 
 import React, { useState } from 'react';
+// same logic as signin check ./app/signin/page.js
 import { useCreateUserWithEmailAndPassword } from 'react-firebase-hooks/auth';
 import { auth } from "@/firebase";
 import { useRouter } from 'next/navigation';
 
 const SignUp = () => {
 
-
-    const [createUserWithEmailAndPassword] = useCreateUserWithEmailAndPassword(auth);
-    const route = useRouter();
+  const [createUserWithEmailAndPassword] = useCreateUserWithEmailAndPassword(auth);
+  const route = useRouter();
 
   const [formData, setFormData] = useState({
     username: '',
@@ -17,6 +17,7 @@ const SignUp = () => {
     password: '',
   });
 
+  // dynamically change form
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({
@@ -25,22 +26,23 @@ const SignUp = () => {
     });
   };
 
+  // subimt the new user to the hook function
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
         const res = await createUserWithEmailAndPassword(formData.email, formData.password)
         console.log(res)
+        // reset our form to empty
         setFormData({
             username: '',
             email: '',
             password: '',
         })
-
+        // create user success should redirect to main page
+        route.push("/")
     }catch(e){
         console.log(e)
     }
-
-
     console.log('Form submitted:', formData);
   };
 

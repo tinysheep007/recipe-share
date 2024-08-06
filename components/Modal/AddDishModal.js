@@ -4,6 +4,7 @@ import { Box, Typography, TextField, Button, Modal, Stack } from '@mui/material'
 import { useState } from 'react';
 
 export default function AddDishModal({ open, onClose, onSubmit }) {
+  // all variables in the form
   const [dishName, setDishName] = useState("");
   const [prepTime, setPrepTime] = useState("");
   const [cost, setCost] = useState("");
@@ -11,11 +12,14 @@ export default function AddDishModal({ open, onClose, onSubmit }) {
   const [ingredients, setIngredients] = useState([{ name: "", quantity: "" }]);
   const [pictureUrl, setPictureUrl] = useState(""); 
 
+  // handle submission
   const handleSubmit = () => {
 
     const url = pictureUrl;
+    // if no url is given, we will give a default pic URL
     const finalPictureUrl = url || "https://www.destenaire.com/noaccess/wp-content/uploads/2014/10/8-Oddest-Food-Items-Featured-Image1.png";
 
+    // acutally call the onSubmit from the main page which then CRUD on firebase firestore
     onSubmit({ dishName, prepTime, cost, ingredients, pictureUrl: finalPictureUrl, instructions });
     setDishName('');
     setPrepTime('');

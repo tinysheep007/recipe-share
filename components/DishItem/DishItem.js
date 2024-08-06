@@ -11,14 +11,21 @@ import { auth } from '@/firebase';
 import ViewDishModal from '@/components/Modal/ViewDishModal'; 
 
 export default function DishItem({ dish, onManageIngredients, updateDishes }) {
-  const [user] = useAuthState(auth); 
+  const [user] = useAuthState(auth);
+  // if current no user, use browser as user ID
   const currentUserId = user ? user.uid : "browser";
+  // controls opening of the detailed view
   const [openViewModal, setOpenViewModal] = useState(false); 
 
+  // handle deletion based on dish ID
   const handleDelete = async () => {
     try {
       const dishRef = doc(firestore, 'dishes', dish.id);
+      // delete this dish document in dishes collection
       await deleteDoc(dishRef);
+
+      // re-render main page
+      // this function is passed down from the parent (Main page)
       await updateDishes();
      
     } catch (error) {
@@ -53,7 +60,7 @@ export default function DishItem({ dish, onManageIngredients, updateDishes }) {
         <Typography variant="body2">
           Cost: {dish.cost}
         </Typography>
-        
+        {/* only allow deletion when the current user is the creater of this dish */}
         {
           currentUserId === dish.userID && (
             <Button

@@ -7,6 +7,7 @@ export default function SearchBar({ onSearch }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [searchOption, setSearchOption] = useState("dishName");
 
+  // call the parent function to perform search
   const handleSearch = () => {
     onSearch(searchTerm, searchOption);
   };

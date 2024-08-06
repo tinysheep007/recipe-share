@@ -2,12 +2,19 @@
 
 import React, { useState } from 'react';
 import { auth } from "@/firebase";
+// from the react-firebase-hooks npm pacakge
+// but we can also use
+// import { signInWithEmailAndPassword } from 'firebase/auth';
+// then later you can
+// const userCredential = await signInWithEmailAndPassword(auth, email, password);
+// const user = userCredential.user;
 import { useSignInWithEmailAndPassword } from "react-firebase-hooks/auth"; 
 import { useRouter } from 'next/navigation';
 
 const SignIn = () => {
 
-    const [signInWithEmailAndPassword] = useSignInWithEmailAndPassword(auth);
+    // extract the actual function from hook
+    const [signInWithEmailAndPassword, user, loading, error] = useSignInWithEmailAndPassword(auth);
     const route = useRouter();
 
   const [formData, setFormData] = useState({
@@ -15,6 +22,7 @@ const SignIn = () => {
     password: '',
   });
 
+  // uupdate forms dynamically without specify which field
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({
@@ -23,19 +31,23 @@ const SignIn = () => {
     });
   };
 
+  // call the sign in method from react-firebase-hooks/auth to sign up
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
         const res = await signInWithEmailAndPassword(formData.email, formData.password);
         console.log(res)
         const u = res.user
+        console.log(u)
         console.log(u.email)
+        // when logged in, we redirect to main page
         route.push("/")
 
     }catch(e){ 
         console.log(e)
+        alert("Wrong username/password")
     }
-    console.log('Form submitted:', formData);
+    // console.log('Form submitted:', formData);
   };
 
   return (
