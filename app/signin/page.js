@@ -79,7 +79,7 @@ const SignIn = () => {
           >
             Sign In
           </button>
-          <button type="button"  onClick={()=>route.push("/signup")} className='w-full mt-3 bg-green-500 text-white py-2 px-4 rounded-md shadow-sm hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500'>Don't have an account? SignUp</button>
+          <button type="button"  onClick={()=>route.push("/signup")} className='w-full mt-3 bg-green-500 text-white py-2 px-4 rounded-md shadow-sm hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500'>Don&apos;t have an account? SignUp</button>
         </form>
       </div>
     </div>
